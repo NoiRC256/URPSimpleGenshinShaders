@@ -68,12 +68,17 @@ Shader "SimpleURPToonLitExample(With Outline)"
         _MainLightIgnoreCelShade("_MainLightIgnoreCelShade", Range(0,1)) = 0
         _AdditionalLightIgnoreCelShade("_AdditionalLightIgnoreCelShade", Range(0,1)) = 0.9
 
+		[Header(Lightmap)]
+		[Toggle]_UseLightMap("_UseLightMap (on/off Custom Lightmap)", Float) = 0
+		[NoScaleOffset]_LightMap("_LightMap", 2D) = "white" {}
+		_ShadowColor("_ShadowColor", Color) = (0,0,0)
+
         [Header(Shadow mapping)]
         _ReceiveShadowMappingAmount("_ReceiveShadowMappingAmount", Range(0,1)) = 0.75
         _ReceiveShadowMappingPosOffset("_ReceiveShadowMappingPosOffset (increase it if is face!)", Float) = 0
 
         [Header(Outline)]
-        _OutlineWidth("_OutlineWidth (World Space)", Range(0,4)) = 1
+        _OutlineWidth("_OutlineWidth (World Space)", Range(0,10)) = 1
         _OutlineColor("_OutlineColor", Color) = (0.5,0.5,0.5,1)
         _OutlineZOffset("_OutlineZOffset (View Space) (increase it if is face!)", Range(0,1)) = 0.0001
         [NoScaleOffset]_OutlineZOffsetMaskTex("_OutlineZOffsetMask (black is apply ZOffset)", 2D) = "black" {}

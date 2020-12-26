@@ -23,6 +23,51 @@ half3 ShadeGIDefaultMethod(ToonSurfaceData surfaceData, LightingData lightingDat
     half3 indirectLight = averageSH * (_IndirectLightMultiplier * indirectOcclusion);
     return max(indirectLight, _IndirectLightMinColor); // can prevent completely black if lightprobe was not baked
 }
+half3 CustomFaceShade(ToonSurfaceData surfaceData, LightingData lightingData, Light light, bool isAdditionalLight) {
+
+	half3 N = lightingData.normalWS;
+	half3 L = light.direction;
+	half3 V = lightingData.viewDirectionWS;
+	half3 H = normalize(L + V);
+	half3 shadowColor = surfaceData._shadowColor;
+
+	half NoL = dot(N, L);
+
+	// ====== Module Start: Genshin style facial shading ======
+
+	// Get forward and right vectors from rotation matrix;
+	float3 ForwardVector = unity_ObjectToWorld._m02_m12_m22;
+	float3 RightVector = unity_ObjectToWorld._m00_m10_m20;
+
+	// Normalize light direction in relation to forward and right vectors;
+	float FrontLight = dot(normalize(ForwardVector.xz), normalize(L.xz));
+	float RightLight = dot(normalize(RightVector.xz), normalize(L.xz));
+
+	RightLight = -(acos(RightLight) / 3.14159265 - 0.5) * 2; // Shadow coverage fix for smoother transition -> https://zhuanlan.zhihu.com/p/279334552;
+
+	// Use r value from the original lightmapileft part in shadow) or flipped lightmap (right part in shadow) depending on normalized light direction;
+	float LightMap = RightLight > 0 ? surfaceData._lightMapR.r : surfaceData._lightMapL.r;
+
+	// This controls how we distribute the speed at which we scroll across the lightmap based on normalized light direction;
+	// Higher values = faster transitions when facing light and slower transitions when facing away from light, lower values = opposite;
+	float dirThreshold = 0.1;
+
+	// If facing light, use right-normalized light direction with dirThreshold. 
+	// If facing away from light, use front-normalized light direction with (1 - dirThreshold) and a corresponding translation...
+	// ...to ensure smooth transition at 180 degrees (where front-normalized light direction == 0).
+	float lightAttenuation_temp = (FrontLight > 0) ?
+		min((LightMap > dirThreshold * RightLight), (LightMap > dirThreshold * -RightLight)) :
+		min((LightMap > (1 - dirThreshold * 2)* FrontLight - dirThreshold), (LightMap > (1 - dirThreshold * 2)* -FrontLight + dirThreshold));
+
+	// [REDUNDANT] Compensate for translation when facing away from light;
+	//lightAttenuation_temp += (FrontLight < -0.9) ? (min((LightMap > 1 * FrontLight), (LightMap > 1 * -FrontLight))) : 0;
+
+	// ====== Module End ======
+
+	float lightAttenuation = surfaceData._useLightMap ? lightAttenuation_temp : 1;
+
+	return lightAttenuation;
+}
 
 // Most important part: lighting equation, edit it according to your needs, write whatever you want here, be creative!
 // this function will be used by all direct lights (directional/point/spot)
@@ -35,7 +80,10 @@ half3 ShadeSingleLightDefaultMethod(ToonSurfaceData surfaceData, LightingData li
 
     half NoL = dot(N,L);
 
-    half lightAttenuation = 1;
+	// Replace original initialization with custom face shading result;
+	// float lightAttenuation = 1f;
+	float lightAttenuation = CustomFaceShade(surfaceData, lightingData, light, isAdditionalLight);
+
 
     // light's shadow map. If you prefer hard shadow, you can smoothstep() light.shadowAttenuation to make it sharp.
     lightAttenuation *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
@@ -68,15 +116,23 @@ half3 ShadeEmissionDefaultMethod(ToonSurfaceData surfaceData, LightingData light
     return emissionResult;
 }
 
-half3 CompositeAllLightResultsDefaultMethod(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult, ToonSurfaceData surfaceData, LightingData lightingData)
+half3 CompositeAllLightResultsDefaultMethod(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult, half3 faceShadowMask, ToonSurfaceData surfaceData, LightingData lightingData)
 {
     // [remember you can write anything here, this is just a simple tutorial method]
     // here we prevent light over bright,
     // while still want to preserve light color's hue
-    half3 rawLightSum = max(indirectResult, mainLightResult + additionalLightSumResult); // pick the highest between indirect and direct light
+	// Legacy method;
+	/*half3 shadowColor = lerp(2*surfaceData._shadowColor, 1, faceShadowMask);
+	half3 result = indirectResult*shadowColor + mainLightResult + additionalLightSumResult + emissionResult;
+    return result;*/
+
+	half3 shadowColor = lerp(1 * surfaceData._shadowColor, 1, faceShadowMask);
+    half3 rawLightSum = max(indirectResult*shadowColor, mainLightResult + additionalLightSumResult); // pick the highest between indirect and direct light
     half lightLuminance = Luminance(rawLightSum);
+
     half3 finalLightMulResult = rawLightSum / max(1,lightLuminance / max(1,log(lightLuminance))); // allow controlled over bright using log
     return surfaceData.albedo * finalLightMulResult + emissionResult;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +180,10 @@ half3 ShadeMainLight(ToonSurfaceData surfaceData, LightingData lightingData, Lig
     //you can switch to ShadeMainLightYourMethod(...) !
     return ShadeSingleLightDefaultMethod(surfaceData, lightingData, light, false); 
 }
+half3 ShadeFaceShadow(ToonSurfaceData surfaceData, LightingData lightingData, Light light)
+{
+	return CustomFaceShade(surfaceData, lightingData, light, false);
+}
 half3 ShadeAdditionalLight(ToonSurfaceData surfaceData, LightingData lightingData, Light light)
 {
     //you can switch to ShadeAllAdditionalLightsYourMethod(...) !
@@ -134,10 +194,10 @@ half3 ShadeEmission(ToonSurfaceData surfaceData, LightingData lightingData)
     //you can switch to ShadeEmissionYourMethod(...) !
     return ShadeEmissionDefaultMethod(surfaceData, lightingData); 
 }
-half3 CompositeAllLightResults(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult, ToonSurfaceData surfaceData, LightingData lightingData)
+half3 CompositeAllLightResults(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult, half3 faceShadowMask, ToonSurfaceData surfaceData, LightingData lightingData)
 {
     //you can switch to CompositeAllLightResultsYourMethod(...) !
-    return CompositeAllLightResultsDefaultMethod(indirectResult,mainLightResult,additionalLightSumResult,emissionResult, surfaceData, lightingData); 
+    return CompositeAllLightResultsDefaultMethod(indirectResult,mainLightResult,additionalLightSumResult,emissionResult, faceShadowMask, surfaceData, lightingData); 
 }
 
 #endif
