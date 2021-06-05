@@ -73,6 +73,13 @@ Shader "SimpleURPToonLitExample(With Outline)"
 		[NoScaleOffset]_LightMap("_LightMap", 2D) = "white" {}
 		_ShadowColor("_ShadowColor", Color) = (0,0,0)
 
+		[Header(Rim Light)]
+		[Enum(Off,0,RimLight,1,FakeSSS,2)]_UseRimLight("_UseRimLight", Float) = 0
+		[HDR]_RimColor("_RimColor", Color) = (0.8,0.8,0.8,0.5)
+		_RimMin("_RimMin", Range(0,2)) = 0.5
+		_RimMax("_RimMax", Range(0, 2)) = 1
+
+
         [Header(Shadow mapping)]
         _ReceiveShadowMappingAmount("_ReceiveShadowMappingAmount", Range(0,1)) = 0.75
         _ReceiveShadowMappingPosOffset("_ReceiveShadowMappingPosOffset (increase it if is face!)", Float) = 0

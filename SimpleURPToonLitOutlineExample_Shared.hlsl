@@ -72,6 +72,7 @@ sampler2D _BaseMap;
 sampler2D _EmissionMap;
 sampler2D _OcclusionMap;
 sampler2D _OutlineZOffsetMaskTex;
+sampler2D _LightMap;
 
 // put all your uniforms(usually things inside .shader file's properties{}) inside this CBUFFER, in order to make SRP batcher compatible
 // see -> https://blogs.unity3d.com/2019/02/28/srp-batcher-speed-up-your-rendering/
@@ -108,6 +109,16 @@ CBUFFER_START(UnityPerMaterial)
     half    _MainLightIgnoreCelShade;
     half    _AdditionalLightIgnoreCelShade;
 
+	// lightmap
+	float _UseLightMap;
+	half3 _ShadowColor;
+
+	// rimlight
+	float _UseRimLight;
+	half4 _RimColor;
+	half _RimMin;
+	half _RimMax;
+
     // shadow mapping
     half    _ReceiveShadowMappingAmount;
     float   _ReceiveShadowMappingPosOffset;
@@ -131,6 +142,15 @@ struct ToonSurfaceData
     half    alpha;
     half3   emission;
     half    occlusion;
+	half _useLightMap;
+	half3 _lightMapL;
+	half3 _lightMapR;
+	half3 _shadowColor;
+	half _useRimLight;
+	half4 _rimColor;
+	half _rimMin;
+	half _rimMax;
+	//half3 _rimMask
 };
 struct LightingData
 {
@@ -250,6 +270,54 @@ half GetFinalOcculsion(Varyings input)
 
     return result;
 }
+half3 GetFinalShadowColor(Varyings input) 
+{
+	return _ShadowColor.rgb;
+}
+half GetUseLightMap(Varyings input)
+{
+	if (_UseLightMap)
+	{
+		return 1;
+	}
+	return 0;
+}
+half3 GetLeftLightMap(Varyings input)
+{
+	if (_UseLightMap)
+	{
+		float4 lightMapL = tex2D(_LightMap, input.uv);
+		return lightMapL;
+	}
+	return 1;
+}
+half3 GetRightLightMap(Varyings input)
+{
+	if (_UseLightMap)
+	{
+		float2 flippedUV = float2(1 - input.uv.x, input.uv.y);
+		float4 lightMapR = tex2D(_LightMap, flippedUV);
+		return lightMapR;
+	}
+	return 1;
+}
+
+half GetUseRimLight(Varyings input) {
+	if (_UseRimLight) {
+		return 1;
+	}
+	return 0;
+}
+half4 GetRimColor(Varyings input) {
+	return _RimColor;
+}
+half GetRimMin(Varyings input) {
+	return _RimMin;
+}
+half GetRimMax(Varyings input) {
+	return _RimMax;
+}
+
 void DoClipTestToTargetAlphaValue(half alpha) 
 {
 #if _UseAlphaClipping
@@ -271,6 +339,20 @@ ToonSurfaceData InitializeSurfaceData(Varyings input)
 
     // occlusion
     output.occlusion = GetFinalOcculsion(input);
+
+	// lightmap
+	output._useLightMap = GetUseLightMap(input);
+	output._lightMapL = GetLeftLightMap(input);
+	output._lightMapR = GetRightLightMap(input);
+
+	// shadow color
+	output._shadowColor = GetFinalShadowColor(input);
+
+	// rim light
+	output._useRimLight = GetUseRimLight(input);
+	output._rimColor = GetRimColor(input);
+	output._rimMin = GetRimMin(input);
+	output._rimMax = GetRimMax(input);
 
     return output;
 }
@@ -334,6 +416,7 @@ half3 ShadeAllLights(ToonSurfaceData surfaceData, LightingData lightingData)
 
     // Main light
     half3 mainLightResult = ShadeMainLight(surfaceData, lightingData, mainLight);
+	half3 faceShadowMask = ShadeFaceShadow(surfaceData, lightingData, mainLight);
 
     //==============================================================================================
     // All additional lights
@@ -360,9 +443,9 @@ half3 ShadeAllLights(ToonSurfaceData surfaceData, LightingData lightingData)
     //==============================================================================================
 
     // emission
-    half3 emissionResult = ShadeEmission(surfaceData, lightingData);
+    half3 emissionResult = ShadeEmission(surfaceData, lightingData, mainLight);
 
-    return CompositeAllLightResults(indirectResult, mainLightResult, additionalLightSumResult, emissionResult, surfaceData, lightingData);
+    return CompositeAllLightResults(indirectResult, mainLightResult, additionalLightSumResult, emissionResult, faceShadowMask, surfaceData, lightingData);
 }
 
 half3 ConvertSurfaceColorToOutlineColor(half3 originalSurfaceColor)
