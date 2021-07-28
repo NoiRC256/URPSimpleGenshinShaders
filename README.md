@@ -1,3 +1,8 @@
+Modified for Genshin style facial shading workflow.
+
+---
+# Original README
+
 # Unity URP Simplified Toon Lit Shader Example (for you to learn writing custom lit shader in URP)
 
 This repository is NOT the full version shader, the full version shader is still WIP and not yet released.
