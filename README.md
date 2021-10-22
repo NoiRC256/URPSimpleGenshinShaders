@@ -3,7 +3,8 @@ Modified for Genshin style facial shading workflow.
 Aditional features:
  - Supports face shadow gradient map
  - Custom face shadow colour
- - 
+
+
 # Original README
 
 # Unity URP Simplified Toon Lit Shader Example (for you to learn writing custom lit shader in URP)
