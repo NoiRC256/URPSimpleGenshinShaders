@@ -1,6 +1,7 @@
 # Overview
 Modified for Genshin style facial shading workflow.
-Aditional features:
+
+Additional features:
  - Supports face shadow gradient map
  - Custom face shadow colour
 
