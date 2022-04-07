@@ -1,9 +1,10 @@
-// For more information, visit -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
+// For more information, visit -> https://github.com/NoiRC256/UnityURPToonLitShaderExample
+// Original shader -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
 
 // #ifndef XXX + #define XXX + #endif is a safe guard best practice in almost every .hlsl, 
 // doing this can make sure your .hlsl's user can include this .hlsl anywhere anytime without producing any multi include conflict
-#ifndef SimpleURPToonLitOutlineExample_Shared_Include
-#define SimpleURPToonLitOutlineExample_Shared_Include
+#ifndef SimpleGenshinFacial_Shared_Include
+#define SimpleGenshinFacial_Shared_Include
 
 // We don't have "UnityCG.cginc" in SRP/URP's package anymore, so:
 // Including the following two hlsl files is enough for shading with Universal Pipeline. Everything is included in them.
@@ -152,7 +153,7 @@ struct ToonSurfaceData
 	half _rimMax;
 	//half3 _rimMask
 };
-struct LightingData
+struct ToonLightingData
 {
     half3   normalWS;
     float3  positionWS;
@@ -356,9 +357,9 @@ ToonSurfaceData InitializeSurfaceData(Varyings input)
 
     return output;
 }
-LightingData InitializeLightingData(Varyings input)
+ToonLightingData InitializeLightingData(Varyings input)
 {
-    LightingData lightingData;
+    ToonLightingData lightingData;
     lightingData.positionWS = input.positionWSAndFogFactor.xyz;
     lightingData.viewDirectionWS = SafeNormalize(GetCameraPositionWS() - lightingData.positionWS);  
     lightingData.normalWS = normalize(input.normalWS); //interpolated normal is NOT unit vector, we need to normalize it
@@ -372,11 +373,11 @@ LightingData InitializeLightingData(Varyings input)
 
 // all lighting equation written inside this .hlsl,
 // just by editing this .hlsl can control most of the visual result.
-#include "SimpleURPToonLitOutlineExample_LightingEquation.hlsl"
+#include "SimpleGenshinFacial_LightingEquation.hlsl"
 
 // this function contains no lighting logic, it just pass lighting results data around
 // the job done in this function is "do shadow mapping depth test positionWS offset"
-half3 ShadeAllLights(ToonSurfaceData surfaceData, LightingData lightingData)
+half3 ShadeAllLights(ToonSurfaceData surfaceData, ToonLightingData lightingData)
 {
     // Indirect lighting
     half3 indirectResult = ShadeGI(surfaceData, lightingData);
@@ -414,13 +415,10 @@ half3 ShadeAllLights(ToonSurfaceData surfaceData, LightingData lightingData)
     mainLight.shadowAttenuation = MainLightRealtimeShadow(shadowCoord);
 #endif 
 
-    // Main light
+    // Main light.
     half3 mainLightResult = ShadeMainLight(surfaceData, lightingData, mainLight);
-	half3 faceShadowMask = ShadeFaceShadow(surfaceData, lightingData, mainLight);
 
-    //==============================================================================================
-    // All additional lights
-
+    // All additional lights.
     half3 additionalLightSumResult = 0;
 
 #ifdef _ADDITIONAL_LIGHTS
@@ -434,18 +432,21 @@ half3 ShadeAllLights(ToonSurfaceData surfaceData, LightingData lightingData)
         // Light struct. If ADDITIONAL_LIGHT_CALCULATE_SHADOWS is defined it will also compute shadows.
         int perObjectLightIndex = GetPerObjectLightIndex(i);
         Light light = GetAdditionalPerObjectLight(perObjectLightIndex, lightingData.positionWS); // use original positionWS for lighting
-        light.shadowAttenuation = AdditionalLightShadow(perObjectLightIndex, shadowTestPosWS, 0, 0); // use offseted positionWS for shadow test
 
+        //light.shadowAttenuation = AdditionalLightShadow(perObjectLightIndex, shadowTestPosWS, 0, 0); // use offseted positionWS for shadow test
+        // Fix: For unity 2022 URP, use light direction as third argument;
+        light.shadowAttenuation = AdditionalLightShadow(perObjectLightIndex, shadowTestPosWS, light.direction, 0, 0); // use offseted positionWS for shadow test
+        
         // Different function used to shade additional lights.
         additionalLightSumResult += ShadeAdditionalLight(surfaceData, lightingData, light);
     }
 #endif
-    //==============================================================================================
 
-    // emission
+    // Emission.
     half3 emissionResult = ShadeEmission(surfaceData, lightingData, mainLight);
 
-    return CompositeAllLightResults(indirectResult, mainLightResult, additionalLightSumResult, emissionResult, faceShadowMask, surfaceData, lightingData);
+    // Composite all.
+    return CompositeAllLightResults(indirectResult, mainLightResult, additionalLightSumResult, emissionResult, surfaceData, lightingData, mainLight);
 }
 
 half3 ConvertSurfaceColorToOutlineColor(half3 originalSurfaceColor)
@@ -474,7 +475,7 @@ half4 ShadeFinalColor(Varyings input) : SV_TARGET
     ToonSurfaceData surfaceData = InitializeSurfaceData(input);
 
     // fillin LightingData struct:
-    LightingData lightingData = InitializeLightingData(input);
+    ToonLightingData lightingData = InitializeLightingData(input);
  
     // apply all lighting calculation
     half3 color = ShadeAllLights(surfaceData, lightingData);

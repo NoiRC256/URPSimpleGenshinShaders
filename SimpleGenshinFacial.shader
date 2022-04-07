@@ -1,4 +1,5 @@
-// For more information, visit -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
+// For more information, visit -> https://github.com/NoiRC256/UnityURPToonLitShaderExample
+// Original shader -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
 
 /*
 This shader is a simple example showing you how to write your first URP custom lit shader with "minimum" shader code.
@@ -25,7 +26,7 @@ because:
     - we want to avoid breaking SRP batcher's batching because SRP batcher is per shader variant batching, not per shader
     - all modern GPU(include newer mobile devices) can handle static uniform branching with "almost" no performance cost
 */
-Shader "SimpleURPToonLitExample(With Outline)"
+Shader "SimpleGenshinFacial"
 {
     Properties
     {
@@ -176,7 +177,7 @@ Shader "SimpleURPToonLitExample(With Outline)"
             // (no special #define)
 
             // all shader logic written inside this .hlsl, remember to write all #define BEFORE writing #include
-            #include "SimpleURPToonLitOutlineExample_Shared.hlsl"
+            #include "SimpleGenshinFacial_Shared.hlsl"
 
             ENDHLSL
         }
@@ -228,7 +229,7 @@ Shader "SimpleURPToonLitExample(With Outline)"
             #define ToonShaderIsOutline
 
             // all shader logic written inside this .hlsl, remember to write all #define BEFORE writing #include
-            #include "SimpleURPToonLitOutlineExample_Shared.hlsl"
+            #include "NiloGenshinCharacterShader_Shared.hlsl"
 
             ENDHLSL
         }
@@ -257,7 +258,7 @@ Shader "SimpleURPToonLitExample(With Outline)"
             #define ToonShaderApplyShadowBiasFix
 
             // all shader logic written inside this .hlsl, remember to write all #define BEFORE writing #include
-            #include "SimpleURPToonLitOutlineExample_Shared.hlsl"
+            #include "SimpleGenshinFacial_Shared.hlsl"
 
             ENDHLSL
         }
@@ -287,7 +288,7 @@ Shader "SimpleURPToonLitExample(With Outline)"
             #define ToonShaderIsOutline
 
             // all shader logic written inside this .hlsl, remember to write all #define BEFORE writing #include
-            #include "SimpleURPToonLitOutlineExample_Shared.hlsl"
+            #include "SimpleGenshinFacial_Shared.hlsl"
 
             ENDHLSL
         }

@@ -1,12 +1,14 @@
-# Overview
-Modified for Genshin style facial shading workflow.
+
+# Genshin Facial Shader Overview
+Modified for Genshin style facial shading.
 
 Additional features:
- - Supports face shadow gradient map
- - Custom face shadow colour
+ - Supports Genshin facial shadow gradient map.
+ - Custom face shadow colour.
+ - Supports single directional light.
 
 
-# Original README
+# Information for the Original UnityURPToonLitShaderExample Shader
 
 # Unity URP Simplified Toon Lit Shader Example (for you to learn writing custom lit shader in URP)
 
@@ -46,16 +48,6 @@ see it in motion-> https://youtu.be/GcW0pNo-zus
 see it in motion-> https://youtu.be/7zICgzdxuGg
 ---
 see it in motion-> https://youtu.be/X3XoYMTleJ0
----
-Auto Phong tessellation  
-
-(shader off, no tessellation)
-![screenshot](https://i.imgur.com/yAUdcmK.png)
-(shader on, no tessellation)
-![screenshot](https://i.imgur.com/pncbBUq.png)
-(shader on, enable tessellation! Phong tessellation can make your model smooth without changing your .fbx)
-![screenshot](https://i.imgur.com/nGCmiEj.png)
-see it in motion-> https://youtu.be/D-MxyBa0nJE
 ---
 
 Kawaii model TEST (@ganbaru_sisters)
@@ -348,6 +340,5 @@ model's creator in shader demo image/video:
 - 【オリジナル3Dモデル】Eve -イヴ- by ganbaru_sisters https://booth.pm/en/items/2557029 
 - https://www.mmd.hololive.tv/
 - Japanese Street by Art Equilibrium https://assetstore.unity.com/packages/3d/environments/urban/japanese-street-170162
-- miHoYo - Genshin Impact
 
 
