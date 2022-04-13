@@ -229,7 +229,7 @@ Shader "SimpleGenshinFacial"
             #define ToonShaderIsOutline
 
             // all shader logic written inside this .hlsl, remember to write all #define BEFORE writing #include
-            #include "NiloGenshinCharacterShader_Shared.hlsl"
+            #include "SimpleGenshinFacial_Shared.hlsl"
 
             ENDHLSL
         }
