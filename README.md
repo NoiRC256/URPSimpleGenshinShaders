@@ -1,13 +1,17 @@
 # Genshin Facial Shader Overview
 Modified for Genshin style facial shading.
 
-Additional features:
+Features:
  - Supports Genshin facial shadow gradient map.
  - Custom face shadow colour.
  - Supports single directional light.
  
+ Usage (URP):
+ 1. Assign to face material
+ 2. Set facial shadow gradient texture.
+ 
 ---
-Original UnityURPToonLitShaderExample Shader Information
+Original UnityURPToonLitShaderExample readme
 # Unity URP Simplified Toon Lit Shader Example (for you to learn writing custom lit shader in URP)
 
 This repository is NOT the full version shader, the full version shader is still WIP and not yet released.
