@@ -9,6 +9,7 @@ Features:
  Usage (URP):
  1. Assign to face material
  2. Set facial shadow gradient texture.
+ Note: Character skinned mesh root must be head bone.
  
 ---
 Original UnityURPToonLitShaderExample readme
