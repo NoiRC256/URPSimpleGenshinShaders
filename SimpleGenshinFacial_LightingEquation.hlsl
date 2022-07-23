@@ -219,26 +219,23 @@ half3 ShadeMainLightMyMethod(ToonSurfaceData surfaceData, ToonLightingData light
 	float3 RightVector = unity_ObjectToWorld._m00_m10_m20;
 
 	// Normalize light direction relative to forward and right vectors;
-	float FrontLight = dot(normalize(ForwardVector.xz), normalize(L.xz));
+	float ForwardLight = dot(normalize(ForwardVector.xz), normalize(L.xz));
 	float RightLight = dot(normalize(RightVector.xz), normalize(L.xz));
 
-	RightLight = -(acos(RightLight) / 3.14159265 - 0.5) * 2; // Shadow coverage fix for smoother transition -> https://zhuanlan.zhihu.com/p/279334552;
+	// Shadow coverage fix for smoother transition.
+    // https://zhuanlan.zhihu.com/p/279334552.
+	RightLight = -(acos(RightLight) / 3.14159265 - 0.5) * 2;
 
-	// Use r value from the original lightmapileft part in shadow) or flipped lightmap (right part in shadow) depending on normalized light direction;
-	float LightMap = RightLight > 0 ? surfaceData._lightMapR.r : surfaceData._lightMapL.r;
+	// Use r value from the original lightmap (left part in shadow) or flipped lightmap (right part in shadow) based on normalized light direction;
+	float LightMap = lerp(surfaceData._lightMapR.r, surfaceData._lightMapL.r, step(RightLight, 0));
 
-	// This controls how we distribute the speed at which we scroll across the lightmap based on normalized light direction;
-	// Higher values = faster transitions when facing light and slower transitions when facing away from light, lower values = opposite;
-	float dirThreshold = 0.1;
+	// Apply lightmap.
+    float lightMapAtten = lerp(
+    min((LightMap > RightLight), (LightMap > -RightLight)),
+    min((LightMap < RightLight), (LightMap < -RightLight)),
+    step(ForwardLight, 0));
 
-	// If facing light, use right-normalized light direction with dirThreshold. 
-	// If facing away from light, use front-normalized light direction with (1 - dirThreshold) and a corresponding translation...
-	// ...to ensure smooth transition at 180 degrees (where front-normalized light direction == 0).
-	float lightAttenuation_temp = (FrontLight > 0) ?
-		min((LightMap > dirThreshold * RightLight), (LightMap > dirThreshold * -RightLight)) :
-		min((LightMap > (1 - dirThreshold * 2) * FrontLight - dirThreshold), (LightMap > (1 - dirThreshold * 2) * -FrontLight + dirThreshold));
-
-	float lightAttenuation = surfaceData._useLightMap ? lightAttenuation_temp : 1;
+    float lightAttenuation = lerp(lightMapAtten, 1, step(surfaceData._useLightMap, 0));
 
 	return light.color * lightAttenuation;
 }

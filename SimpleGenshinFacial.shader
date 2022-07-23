@@ -45,7 +45,7 @@ Shader "SimpleGenshinFacial"
 
         [Header(Emission)]
         [Toggle]_UseEmission("_UseEmission (on/off Emission completely)", Float) = 0
-        [HDR] _EmissionColor("_EmissionColor", Color) = (0,0,0)
+        [HDR] _EmissionColor("_EmissionColor", Color) = (0.14902,0.07059,0.05490)
         _EmissionMulByBaseColor("_EmissionMulByBaseColor", Range(0,1)) = 0
         [NoScaleOffset]_EmissionMap("_EmissionMap", 2D) = "white" {}
         _EmissionMapChannelMask("_EmissionMapChannelMask", Vector) = (1,1,1,0)
@@ -72,13 +72,13 @@ Shader "SimpleGenshinFacial"
 		[Header(Lightmap)]
 		[Toggle]_UseLightMap("_UseLightMap (on/off Custom Lightmap)", Float) = 0
 		[NoScaleOffset]_LightMap("_LightMap", 2D) = "white" {}
-		_ShadowColor("_ShadowColor", Color) = (0,0,0)
+		_ShadowColor("_ShadowColor", Color) = (0.97255,0.89412,0.88236)
 
-		[Header(Rim Light)]
-		[Enum(Off,0,RimLight,1,FakeSSS,2)]_UseRimLight("_UseRimLight", Float) = 0
-		[HDR]_RimColor("_RimColor", Color) = (0.8,0.8,0.8,0.5)
-		_RimMin("_RimMin", Range(0,2)) = 0.5
-		_RimMax("_RimMax", Range(0, 2)) = 1
+		//[Header(Rim Light)]
+		//[Enum(Off,0,RimLight,1,FakeSSS,2)]_UseRimLight("_UseRimLight", Float) = 0
+		//[HDR]_RimColor("_RimColor", Color) = (0.8,0.8,0.8,0.5)
+		//_RimMin("_RimMin", Range(0,2)) = 0.5
+		//_RimMax("_RimMax", Range(0, 2)) = 1
 
 
         [Header(Shadow mapping)]
@@ -86,11 +86,11 @@ Shader "SimpleGenshinFacial"
         _ReceiveShadowMappingPosOffset("_ReceiveShadowMappingPosOffset (increase it if is face!)", Float) = 0
 
         [Header(Outline)]
-        _OutlineWidth("_OutlineWidth (World Space)", Range(0,10)) = 1
-        _OutlineColor("_OutlineColor", Color) = (0.5,0.5,0.5,1)
+        _OutlineWidth("_OutlineWidth (World Space)", Range(0,10)) = 0.36
+        _OutlineColor("_OutlineColor", Color) = (0.50196,0.37647,0.36471,1)
         _OutlineZOffset("_OutlineZOffset (View Space) (increase it if is face!)", Range(0,1)) = 0.0001
         [NoScaleOffset]_OutlineZOffsetMaskTex("_OutlineZOffsetMask (black is apply ZOffset)", 2D) = "black" {}
-        _OutlineZOffsetMaskRemapStart("_OutlineZOffsetMaskRemapStart", Range(0,1)) = 0
+        _OutlineZOffsetMaskRemapStart("_OutlineZOffsetMaskRemapStart", Range(0,1)) = 0.02
         _OutlineZOffsetMaskRemapEnd("_OutlineZOffsetMaskRemapEnd", Range(0,1)) = 1
     }
     SubShader

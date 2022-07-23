@@ -1,15 +1,24 @@
 # Genshin Facial Shader Overview
 Modified for Genshin style facial shading.
 
-Features:
- - Supports Genshin facial shadow gradient map.
- - Custom face shadow colour.
- - Supports single directional light.
+### Key Features ###
+ - Supports Genshin facial shadow gradient texture
+ - Custom face shadow colour
+ - Supports single directional light
+ - Outlines with configurable thickness, color, offset
  
- Usage (URP):
+ ### Usage (URP) ###
  1. Assign to face material
- 2. Set facial shadow gradient texture.
- Note: Character skinned mesh root must be head bone.
+ 2. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`
+
+### Note ###
+ - It is recommended to set character's head bone as the character's skinned mesh root. This is the simplest way to allow face shadow to react to light direction in the same way as the original game.
+- You can get preconfigured outlines, shadow color, emission color settings on material reset.
+ - For smooth shadow edges, set shadow gradient texture's compression quality to high. Additionally, avoiding mipmap generation might also have an effect.
+
+ ### Environment ###
+ 
+ This is recently tested on Unity 2021.3.6f1 URP12.1.7, and theoretically works with any modern Unity and URP version.
  
 ---
 Original UnityURPToonLitShaderExample readme
