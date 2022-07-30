@@ -25,7 +25,7 @@ A Unity URP shader that supports Genshin Impact style character facial shading.
  Since `FdotL` is in the range [-1,1], we map it to [0,1] to match lightmap value range.
 
  ```glsl
-// Choose original lightmap L (light from left) or flipped lightmap R (light from right).
+// Choose original lightmap L (light from left) or flipped lightmap R (light from right).
 float LightMap = lerp(surfaceData._lightMapR.r, surfaceData._lightMapL.r, step(RdotL, 0));
 
 // Calculate result.
