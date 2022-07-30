@@ -1,5 +1,5 @@
-# Genshin Facial Shader Overview
-Modified for Genshin style facial shading.
+# Overview
+A Unity URP shader that supports Genshin Impact style character facial shading.
 
 ### Key Features ###
  - Supports Genshin facial shadow gradient texture
@@ -12,16 +12,33 @@ Modified for Genshin style facial shading.
  2. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`
 
 ### Note ###
- - It is recommended to set character's head bone as the character's skinned mesh root. This is the simplest way to allow face shadow to react to light direction in the same way as the original game.
-- You can get preconfigured outlines, shadow color, emission color settings on material reset.
- - For smooth shadow edges, set shadow gradient texture's compression quality to high. Additionally, avoiding mipmap generation might also have an effect.
+ - For smooth shadow edges, make sure to set shadow gradient texture's compression quality to high. Turning off mipmap generation may also have an effect.
 
- ### Environment ###
+ - If shadow coverage doesn't change when the character is turning their head, try setting character's head bone as the character's skinned mesh root.
+
+- You can get preconfigured outline, shadow colour, emission colour settings on material reset.
+
+ ## How It Works ##
+
+ Genshin Impact's facial shadow texture stores shadow coverage information for left-side lighting at angles 0° ~ 180° on the xz plane. All we have to do is take the shadow texture, flip it if light is coming from the right, and compare its colour value with `FdotL` (i.e. forward xz direction • light xz direction) to apply the correct shadow coverage.
+
+ Since `FdotL` is in the range [-1,1], we map it to [0,1] to match lightmap value range.
+
+ ```glsl
+// Choose original lightmap L (light from left) or flipped lightmap R (light from right).
+float LightMap = lerp(surfaceData._lightMapR.r, surfaceData._lightMapL.r, step(RdotL, 0));
+
+// Calculate result.
+float litOrShadow = step((-FdotL + 1) / 2, LightMap);
+```
+
+
+ ## Environment ##
  
- This is recently tested on Unity 2021.3.6f1 URP12.1.7, and theoretically works with any modern Unity and URP version.
- 
+Tested on Unity 2021.3.6f1 URP12.1.7.
+
 ---
-Original UnityURPToonLitShaderExample readme
+### Based on URP toon shader example by ColinLeung-NiloCat. ###
 # Unity URP Simplified Toon Lit Shader Example (for you to learn writing custom lit shader in URP)
 
 This repository is NOT the full version shader, the full version shader is still WIP and not yet released.

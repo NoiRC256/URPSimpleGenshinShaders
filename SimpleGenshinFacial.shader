@@ -43,6 +43,20 @@ Shader "SimpleGenshinFacial"
         [Toggle(_UseAlphaClipping)]_UseAlphaClipping("_UseAlphaClipping", Float) = 0
         _Cutoff("_Cutoff (Alpha Cutoff)", Range(0.0, 1.0)) = 0.5
 
+        [Header(Lightmap)]
+        [Toggle]_UseLightMap("_UseLightMap (on/off Custom Lightmap)", Float) = 0
+        [NoScaleOffset]_LightMap("_LightMap", 2D) = "white" { }
+        _ShadowColor("_ShadowColor", Color) = (0.97255, 0.89412, 0.88236)
+
+        [Header(Lighting)]
+        _IndirectLightMinColor("_IndirectLightMinColor", Color) = (1, 1, 1, 1) // can prevent completely black if lightprobe not baked
+        _IndirectLightMultiplier("_IndirectLightMultiplier", Range(0, 1)) = 1
+        _DirectLightMultiplier("_DirectLightMultiplier", Range(0, 1)) = 0.25
+        _CelShadeMidPoint("_CelShadeMidPoint", Range(-1, 1)) = -.5
+        _CelShadeSoftness("_CelShadeSoftness", Range(0, 1)) = 0.05
+        _MainLightIgnoreCelShade("_MainLightIgnoreCelShade", Range(0, 1)) = 0
+        _AdditionalLightIgnoreCelShade("_AdditionalLightIgnoreCelShade", Range(0, 1)) = 0.9
+
         [Header(Emission)]
         [Toggle]_UseEmission("_UseEmission (on/off Emission completely)", Float) = 0
         [HDR] _EmissionColor("_EmissionColor", Color) = (0.14902,0.07059,0.05490)
@@ -59,27 +73,6 @@ Shader "SimpleGenshinFacial"
         _OcclusionMapChannelMask("_OcclusionMapChannelMask", Vector) = (1,0,0,0)
         _OcclusionRemapStart("_OcclusionRemapStart", Range(0,1)) = 0
         _OcclusionRemapEnd("_OcclusionRemapEnd", Range(0,1)) = 1
-
-        [Header(Lighting)]
-        _IndirectLightMinColor("_IndirectLightMinColor", Color) = (0.1,0.1,0.1,1) // can prevent completely black if lightprobe not baked
-        _IndirectLightMultiplier("_IndirectLightMultiplier", Range(0,1)) = 1
-        _DirectLightMultiplier("_DirectLightMultiplier", Range(0,1)) = 0.25
-        _CelShadeMidPoint("_CelShadeMidPoint", Range(-1,1)) = -.5
-        _CelShadeSoftness("_CelShadeSoftness", Range(0,1)) = 0.05
-        _MainLightIgnoreCelShade("_MainLightIgnoreCelShade", Range(0,1)) = 0
-        _AdditionalLightIgnoreCelShade("_AdditionalLightIgnoreCelShade", Range(0,1)) = 0.9
-
-		[Header(Lightmap)]
-		[Toggle]_UseLightMap("_UseLightMap (on/off Custom Lightmap)", Float) = 0
-		[NoScaleOffset]_LightMap("_LightMap", 2D) = "white" {}
-		_ShadowColor("_ShadowColor", Color) = (0.97255,0.89412,0.88236)
-
-		//[Header(Rim Light)]
-		//[Enum(Off,0,RimLight,1,FakeSSS,2)]_UseRimLight("_UseRimLight", Float) = 0
-		//[HDR]_RimColor("_RimColor", Color) = (0.8,0.8,0.8,0.5)
-		//_RimMin("_RimMin", Range(0,2)) = 0.5
-		//_RimMax("_RimMax", Range(0, 2)) = 1
-
 
         [Header(Shadow mapping)]
         _ReceiveShadowMappingAmount("_ReceiveShadowMappingAmount", Range(0,1)) = 0.75

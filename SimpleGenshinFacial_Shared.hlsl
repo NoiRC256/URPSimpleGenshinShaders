@@ -114,12 +114,6 @@ CBUFFER_START(UnityPerMaterial)
 	float _UseLightMap;
 	half3 _ShadowColor;
 
-	// rimlight
-	float _UseRimLight;
-	half4 _RimColor;
-	half _RimMin;
-	half _RimMax;
-
     // shadow mapping
     half    _ReceiveShadowMappingAmount;
     float   _ReceiveShadowMappingPosOffset;
@@ -147,12 +141,8 @@ struct ToonSurfaceData
 	half3 _lightMapL;
 	half3 _lightMapR;
 	half3 _shadowColor;
-	half _useRimLight;
-	half4 _rimColor;
-	half _rimMin;
-	half _rimMax;
-	//half3 _rimMask
 };
+
 struct ToonLightingData
 {
     half3   normalWS;
@@ -247,6 +237,7 @@ half4 GetFinalBaseColor(Varyings input)
 {
     return tex2D(_BaseMap, input.uv) * _BaseColor;
 }
+
 half3 GetFinalEmissionColor(Varyings input)
 {
     half3 result = 0;
@@ -257,6 +248,7 @@ half3 GetFinalEmissionColor(Varyings input)
 
     return result;
 }
+
 half GetFinalOcculsion(Varyings input)
 {
     half result = 1;
@@ -271,10 +263,12 @@ half GetFinalOcculsion(Varyings input)
 
     return result;
 }
+
 half3 GetFinalShadowColor(Varyings input) 
 {
 	return _ShadowColor.rgb;
 }
+
 half GetUseLightMap(Varyings input)
 {
 	if (_UseLightMap)
@@ -283,6 +277,7 @@ half GetUseLightMap(Varyings input)
 	}
 	return 0;
 }
+
 half3 GetLeftLightMap(Varyings input)
 {
 	if (_UseLightMap)
@@ -292,6 +287,7 @@ half3 GetLeftLightMap(Varyings input)
 	}
 	return 1;
 }
+
 half3 GetRightLightMap(Varyings input)
 {
 	if (_UseLightMap)
@@ -303,28 +299,13 @@ half3 GetRightLightMap(Varyings input)
 	return 1;
 }
 
-half GetUseRimLight(Varyings input) {
-	if (_UseRimLight) {
-		return 1;
-	}
-	return 0;
-}
-half4 GetRimColor(Varyings input) {
-	return _RimColor;
-}
-half GetRimMin(Varyings input) {
-	return _RimMin;
-}
-half GetRimMax(Varyings input) {
-	return _RimMax;
-}
-
 void DoClipTestToTargetAlphaValue(half alpha) 
 {
 #if _UseAlphaClipping
     clip(alpha - _Cutoff);
 #endif
 }
+
 ToonSurfaceData InitializeSurfaceData(Varyings input)
 {
     ToonSurfaceData output;
@@ -349,14 +330,9 @@ ToonSurfaceData InitializeSurfaceData(Varyings input)
 	// shadow color
 	output._shadowColor = GetFinalShadowColor(input);
 
-	// rim light
-	output._useRimLight = GetUseRimLight(input);
-	output._rimColor = GetRimColor(input);
-	output._rimMin = GetRimMin(input);
-	output._rimMax = GetRimMax(input);
-
     return output;
 }
+
 ToonLightingData InitializeLightingData(Varyings input)
 {
     ToonLightingData lightingData;
@@ -453,6 +429,7 @@ half3 ConvertSurfaceColorToOutlineColor(half3 originalSurfaceColor)
 {
     return originalSurfaceColor * _OutlineColor;
 }
+
 half3 ApplyFog(half3 color, Varyings input)
 {
     half fogFactor = input.positionWSAndFogFactor.w;
