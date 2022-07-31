@@ -8,11 +8,14 @@ A Unity URP shader that supports Genshin Impact style character facial shading.
  - Outlines with configurable thickness, color, offset
  
  ### Usage (URP) ###
- 1. Assign to face material
- 2. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`
+ 1. Prepare Genshin facial shadow gradient texture. Set Texture Type to Directional Lightmap.
+ 2. Assign shader to face material.
+ 3. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`.
 
 ### Note ###
- - For smooth shadow edges, make sure to set shadow gradient texture's compression quality to high. Turning off mipmap generation may also have an effect.
+- Main light intensity must be within 1 for correct results (fix soon).
+
+ - For smooth shadow edges, set shadow gradient texture's compression quality to high.
 
  - If shadow coverage doesn't change when the character is turning their head, try setting character's head bone as the character's skinned mesh root.
 

@@ -27,7 +27,6 @@ half3 InternalShadeGI(ToonSurfaceData surfaceData, ToonLightingData lightingData
 
 half3 InternalShadeMainLight(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light, bool isAdditionalLight)
 {
-    half3 N = lightingData.normalWS;
     half3 L = light.direction;
 
     // Get forward and right directions from rotation matrix.
