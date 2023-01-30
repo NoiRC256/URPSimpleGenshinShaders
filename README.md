@@ -6,6 +6,9 @@ A Unity URP shader that supports Genshin Impact style character facial shading.
  - Custom face shadow colour
  - Supports single directional light
  - Outlines with configurable thickness, color, offset
+
+ [Demo Video (Bilibili)](https://www.bilibili.com/video/BV15t4y1V76U)
+ <img src="https://i.ibb.co/DfHh14Y/thumbnail1-l-JPG.png" width="50%">
  
  ### Usage (URP) ###
  1. Prepare Genshin facial shadow gradient texture. Set Texture Type to Directional Lightmap.
@@ -17,7 +20,7 @@ A Unity URP shader that supports Genshin Impact style character facial shading.
 
  - For smooth shadow edges, set shadow gradient texture's compression quality to high.
 
- - If shadow coverage doesn't change when the character is turning their head, try setting character's head bone as the character's skinned mesh root.
+ - If shadow coverage doesn't change when the character is turning their head, try setting the character's head bone as the character's skinned mesh root.
 
 - You can get preconfigured outline, shadow colour, emission colour settings on material reset.
 
