@@ -8,6 +8,7 @@ A Unity URP shader that supports Genshin Impact style character facial shading.
  - Outlines with configurable thickness, color, offset
 
  [Demo Video (Bilibili)](https://www.bilibili.com/video/BV15t4y1V76U)
+ 
  <img src="https://i.ibb.co/DfHh14Y/thumbnail1-l-JPG.png" width="50%">
  
  ### Usage (URP) ###
