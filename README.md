@@ -1,27 +1,55 @@
-# Genshin Facial Shader Overview
-Modified for Genshin style facial shading.
+# Overview
+A Unity URP shader that supports Genshin Impact style character facial shading.
 
 ### Key Features ###
  - Supports Genshin facial shadow gradient texture
- - Custom face shadow colour
+    - All angles
+    - Adjustable light direction offset
+    - Shadow color
+
  - Supports single directional light
+
  - Outlines with configurable thickness, color, offset
+
+ [Demo Video (Bilibili)](https://www.bilibili.com/video/BV15t4y1V76U)
+ 
+ <img src="https://i.ibb.co/DfHh14Y/thumbnail1-l-JPG.png" width="50%">
  
  ### Usage (URP) ###
- 1. Assign to face material
- 2. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`
+
+ 1. Prepare Genshin facial shadow gradient texture. Disable *sRGB (Color Texture)* or set Texture Type to *Directional Lightmap*.
+
+ 2. Assign shader to face material. (Then reset material to get pre-configured settings)
+
+ 3. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`.
 
 ### Note ###
- - It is recommended to set character's head bone as the character's skinned mesh root. This is the simplest way to allow face shadow to react to light direction in the same way as the original game.
-- You can get preconfigured outlines, shadow color, emission color settings on material reset.
- - For smooth shadow edges, set shadow gradient texture's compression quality to high. Additionally, avoiding mipmap generation might also have an effect.
 
- ### Environment ###
- 
- This is recently tested on Unity 2021.3.6f1 URP12.1.7, and theoretically works with any modern Unity and URP version.
+- Main light intensity must be within 1 for correct shadow color (need better shadow color implementation).
+
+- For smooth shadow edges, set shadow gradient texture's compression quality to high.
+
+- If shadow coverage doesn't change based on the head facing (eg. based on hip facing instead), try setting the character's head bone as the character head mesh's skinned mesh root.
+
+- You can get preconfigured outline, shadow colour, emission colour settings on material reset.
+
+## How It Works ##
+
+Genshin Impact's facial shadow texture stores shadow coverage information for left-side lighting at angles 0° ~ 180° on the xz plane. All we have to do is take the shadow texture, flip it if light is coming from the right, and compare its colour value with `FdotL` (i.e. forward xz direction • light xz direction) to apply the correct shadow coverage.
+
+Since `FdotL` is in the range [-1,1], we map it to [0,1] to match lightmap value range.
+
+```glsl
+float LightMap = RdotL > 0 ? surfaceData._lightMapR.r : surfaceData._lightMapL.r;
+float litOrShadow = step((-FdotL + 1) / 2, LightMap);
+```
+
+## Environment ##
+Tested in Unity 2022.2.1f1, URP14.0.4
  
 ---
-Original UnityURPToonLitShaderExample readme
+### Based on URP toon shader example by ColinLeung-NiloCat. ###
+
 # Unity URP Simplified Toon Lit Shader Example (for you to learn writing custom lit shader in URP)
 
 This repository is NOT the full version shader, the full version shader is still WIP and not yet released.

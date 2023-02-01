@@ -68,7 +68,8 @@
         normalizedFdotL %= 1;
         half litOrShadow = step(normalizedFdotL , LightMap);
 
-        return light.color * lerp(litOrShadow, 1, step(surfaceData._useLightMap, 0));
+        return litOrShadow ? light.color : light.color * surfaceData._shadowColor;
+        //return light.color * lerp(litOrShadow, 1, step(surfaceData._useLightMap, 0));
     }
 
     half3 InternalShadeAdditionalLights(ToonSurfaceData surfaceData,
@@ -97,8 +98,8 @@
     half3 InternalCompositeLightResults(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult,
     ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
     {
-        half3 shadowColor = light.color * lerp(1 * surfaceData._shadowColor, 1, mainLightResult);
-        half3 rawLightSum = max(indirectResult * shadowColor, mainLightResult + additionalLightSumResult); // pick the highest between indirect and direct light
+        //half3 shadowColor = light.color * lerp(1 * surfaceData._shadowColor, 1, mainLightResult);
+        half3 rawLightSum = max(indirectResult, mainLightResult + additionalLightSumResult); // pick the highest between indirect and direct light
         half lightLuminance = Luminance(rawLightSum);
 
         half3 finalLightMulResult = rawLightSum / max(1, lightLuminance / max(1, log(lightLuminance))); // allow controlled over bright using log
