@@ -43,10 +43,12 @@ Shader "SimpleGenshinFacial"
         [Toggle(_UseAlphaClipping)]_UseAlphaClipping("_UseAlphaClipping", Float) = 0
         _Cutoff("_Cutoff (Alpha Cutoff)", Range(0.0, 1.0)) = 0.5
 
-        [Header(Lightmap)]
+        [Header(Facial Lightmap)]
         [Toggle]_UseLightMap("_UseLightMap (on/off Custom Lightmap)", Float) = 0
         [NoScaleOffset]_LightMap("_LightMap", 2D) = "white" { }
         _ShadowColor("_ShadowColor", Color) = (0.97255, 0.89412, 0.88236)
+        _FaceDirectionOffset("_FaceDirectionOffset", Float) = 0
+        [Toggle]_ReverseFaceDirection("_ReverseFaceDirection (on/off)", Float) = 0
 
         [Header(Lighting)]
         _IndirectLightMinColor("_IndirectLightMinColor", Color) = (1, 1, 1, 1) // can prevent completely black if lightprobe not baked
