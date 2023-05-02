@@ -1,15 +1,20 @@
 # Overview
-A Unity URP shader that supports Genshin Impact style character facial shading.
+A Unity URP shader for Genshin Impact style character facial shading.
 
 ### Key Features ###
  - Supports Genshin facial shadow gradient texture
     - All angles
     - Adjustable light direction offset
     - Shadow color
-
- - Supports single directional light
-
+    
  - Outlines with configurable thickness, color, offset
+
+ ### Limitations that probably need to be fixed ###
+ - Only supports one directional light
+
+ - Does not receive external shadows
+
+ - Unnatural shadow color when main light intensity > 1
 
  [Demo Video (Bilibili)](https://www.bilibili.com/video/BV15t4y1V76U)
  
@@ -17,21 +22,21 @@ A Unity URP shader that supports Genshin Impact style character facial shading.
  
  ### Usage (URP) ###
 
- 1. Prepare Genshin facial shadow gradient texture. Disable *sRGB (Color Texture)* or set Texture Type to *Directional Lightmap*.
+Facial shadow gradient textures for Genshin Impact character models can be found under `./Textures/`.
 
- 2. Assign shader to face material. (Then reset material to get pre-configured settings)
+ 1. Prepare facial shadow gradient texture. Disable *sRGB (Color Texture)* or set Texture Type to *Directional Lightmap*.
 
- 3. Assign Genshin facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`.
+ 2. Assign shader `SimpleGenshinFacial` to face material. (reset material to get pre-configured settings)
 
-### Note ###
+ 3. Assign facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`.
 
-- Main light intensity must be within 1 for correct shadow color (need better shadow color implementation).
+### FAQ ###
 
-- For smooth shadow edges, set shadow gradient texture's compression quality to high.
+- Shadows are blurry - For smooth shadow edges, set shadow gradient texture's compression quality to high.
 
-- If shadow coverage doesn't change based on the head facing (eg. based on hip facing instead), try setting the character's head bone as the character head mesh's skinned mesh root.
+- Shadow coverage doesn't change based on the head facing - The shader might not be reading the correct object direction. Try setting the character's head bone as the character head mesh's skinned mesh root. Alternatively, you could modify the shader to use a direction that can be updated by script.
 
-- You can get preconfigured outline, shadow colour, emission colour settings on material reset.
+- Recommended material property settings - You can get preconfigured outline, shadow color, emission color settings on material reset (click the three vertical dots on the top right corner in the material inspector).
 
 ## How It Works ##
 
