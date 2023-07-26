@@ -2,19 +2,18 @@
 A Unity URP shader for Genshin Impact style character facial shading.
 
 ### Key Features ###
- - Supports Genshin facial shadow gradient texture
+ - Supports Genshin facial shadow gradient / SDF texture (dynamic face shadow map)
     - All angles
     - Adjustable light direction offset
     - Shadow color
     
  - Outlines with configurable thickness, color, offset
+ - Receives main light shadows casted by other meshes
 
  ### Limitations that probably need to be fixed ###
- - Only supports one directional light
+ - If `IsFace?` is set to true, shadows casted by other objects onto it may disappear or become unstable when the camera is close. This is because the shader relies on adding a `_ReceiveShadowMappingPosOffset` to visually hide dirty shadows on the face.
 
- - Does not receive external shadows
-
- - Unnatural shadow color when main light intensity > 1
+ - Lacks companion script that sends face direction information to shader.
 
  [Demo Video (Bilibili)](https://www.bilibili.com/video/BV15t4y1V76U)
  
@@ -22,13 +21,17 @@ A Unity URP shader for Genshin Impact style character facial shading.
  
  ### Usage (URP) ###
 
-Facial shadow gradient textures for Genshin Impact character models can be found under `./Textures/`.
+Dynamic face shadow map textures for Genshin Impact character models can be found under `./Textures/`.
 
- 1. Prepare facial shadow gradient texture. Disable *sRGB (Color Texture)* or set Texture Type to *Directional Lightmap*.
+ 1. Prepare face shadow map texture. Disable *sRGB (Color Texture)* or set Texture Type to *Directional Lightmap*.
 
- 2. Assign shader `SimpleGenshinFacial` to face material. (reset material to get pre-configured settings)
+ 2. Assign shader `SimpleGenshinFacial` to character's face material.
 
- 3. Assign facial shadow gradient texture to the `_LightMap` field, and enable `_UseLightMap`.
+ 3. In the material inspector, enable `_UseFaceShadowMap` on the top. Assign the face shadow map texture to the `_FaceShadowMap` field.
+
+ 4. For some models, you might need to adjust `_FaceDirectionOffset` to 3 or other values.
+
+ 5. To hide dirty shadows on the face, set `IsFace?` to true on the top.
 
 ### FAQ ###
 
@@ -36,7 +39,7 @@ Facial shadow gradient textures for Genshin Impact character models can be found
 
 - Shadow coverage doesn't change based on the head facing - The shader might not be reading the correct object direction. Try setting the character's head bone as the character head mesh's skinned mesh root. Alternatively, you could modify the shader to use a direction that can be updated by script.
 
-- Recommended material property settings - You can get preconfigured outline, shadow color, emission color settings on material reset (click the three vertical dots on the top right corner in the material inspector).
+- Received shadows casted by other meshes disappear when the camera is close -  This can happen when `IsFace?` is enabled. `IsFace?` hides shadows casted by self by adding a shadow mapping offset. A workaround is to keep `IsFace?` false and instead make the character's own face mesh not cast shadows.
 
 ## How It Works ##
 

@@ -1,142 +1,126 @@
-// For more information, visit -> https://github.com/NoiRC256/UnityURPToonLitShaderExample
-// Original shader -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
+// For more information, visit -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
 
 // This file is intented for you to edit and experiment with different lighting equation.
 // Add or edit whatever code you want here
 
-// #ifndef XXX + #define XXX + #endif is a safe guard best practice in almost every .hlsl, 
+// #pragma once is a safe guard best practice in almost every .hlsl (need Unity2020 or up), 
 // doing this can make sure your .hlsl's user can include this .hlsl anywhere anytime without producing any multi include conflict
-#ifndef SimpleGenshinFacial_LightingEquation_Include
-    #define SimpleGenshinFacial_LightingEquation_Include
+#pragma once
 
-    half3 InternalShadeGI(ToonSurfaceData surfaceData, ToonLightingData lightingData)
-    {
-        // hide 3D feeling by ignoring all detail SH
-        // SH 1 (only use this)
-        // SH 234 (ignored)
-        // SH 56789 (ignored)
-        // we just want to tint some average envi color only
-        half3 averageSH = SampleSH(0);
+float3x3 AngleAxis3x3(float angle, float3 axis);
 
-        // occlusion
-        // separated control for indirect occlusion
-        half indirectOcclusion = lerp(1, surfaceData.occlusion, _OcclusionIndirectStrength);
-        half3 indirectLight = averageSH * (_IndirectLightMultiplier * indirectOcclusion);
-        return max(indirectLight, _IndirectLightMinColor); // can prevent completely black if lightprobe was not baked
+half3 ShadeGI(ToonSurfaceData surfaceData, ToonLightingData lightingData)
+{
+    // hide 3D feeling by ignoring all detail SH (leaving only the constant SH term)
+    // we just want some average envi indirect color only
+    half3 averageSH = SampleSH(0);
+
+    // can prevent result becomes completely black if lightprobe was not baked 
+    averageSH = max(_IndirectLightMinColor,averageSH);
+
+    // occlusion (maximum 50% darken for indirect to prevent result becomes completely black)
+    half indirectOcclusion = lerp(1, surfaceData.occlusion, 0.5);
+    return averageSH * indirectOcclusion;
+}
+
+half3 CalculateFaceShadowMapShading(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
+{
+    half3 L = light.direction;
+    half3 modifiedL = L;
+    // Offset the received light direction by rotating around y axis.
+    if(surfaceData.faceDirectionOffset != 0){
+        modifiedL = mul(L, AngleAxis3x3(surfaceData.faceDirectionOffset, float3(0,1,0)));
     }
 
-    // Rotation with angle (in radians) and axis
-    float3x3 AngleAxis3x3(float angle, float3 axis)
-    {
-        float c, s;
-        sincos(angle, s, c);
+    // Get object directions relative to light direction.
+    half3 Up = unity_ObjectToWorld._m01_m11_m21;
+    half IsUpright = (Up.y - L.y) < 0 ? 1 : -1;
+    half3 Forward = unity_ObjectToWorld._m02_m12_m22;
+    half FdotL = dot(Forward.xz, modifiedL.xz) * IsUpright;
+    half3 Right = unity_ObjectToWorld._m00_m10_m20;
+    half RdotL = dot(Right.xz, modifiedL.xz) * IsUpright;
 
-        float t = 1 - c;
-        float x = axis.x;
-        float y = axis.y;
-        float z = axis.z;
+    // Choose original map L (light from left) or flipped map R (light from right).
+    half faceShadowMap = RdotL > 0 ? surfaceData.faceShadowMapR.r : surfaceData.faceShadowMapL.r;
 
-        return float3x3(
-        t * x * x + c,      t * x * y - s * z,  t * x * z + s * y,
-        t * x * y + s * z,  t * y * y + c,      t * y * z - s * x,
-        t * x * z - s * y,  t * y * z + s * x,  t * z * z + c
-        );
-    }
+    // Calculate result.
+    half normalizedFdotL = (surfaceData.flipFaceDirection >= 1 ? -1 : 1) * -0.5 * FdotL + 0.5;
+    normalizedFdotL %= 1;
+    half litOrShadow = step(normalizedFdotL , faceShadowMap);
+    return litOrShadow;
+}
 
-    half3 InternalShadeMainLight(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light, bool isAdditionalLight)
-    {
-        half3 L = light.direction;
-        half3 modifiedL = L;
-        // Offset the received light direction by rotating around y axis.
-        if(surfaceData._faceDirectionOffset != 0){
-            modifiedL = mul(L, AngleAxis3x3(surfaceData._faceDirectionOffset, float3(0,1,0)));
-        }
+// Most important part: lighting equation, edit it according to your needs, write whatever you want here, be creative!
+// This function will be used by all direct lights (directional/point/spot)
+half3 ShadeSingleLight(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light, bool isAdditionalLight)
+{
+    half3 N = lightingData.normalWS;
+    half3 L = light.direction;
 
-        // Get object directions relative to light direction.
-        half3 Up = unity_ObjectToWorld._m01_m11_m21;
-        half IsUpright = (Up.y - L.y) < 0 ? 1 : -1;
-        half3 Forward = unity_ObjectToWorld._m02_m12_m22;
-        half FdotL = dot(Forward.xz, modifiedL.xz) * IsUpright;
-        half3 Right = unity_ObjectToWorld._m00_m10_m20;
-        half RdotL = dot(Right.xz, modifiedL.xz) * IsUpright;
+    half NoL = dot(N,L);
 
-        // Choose original lightmap L (light from left) or flipped lightmap R (light from right).
-        half LightMap = RdotL > 0 ? surfaceData._lightMapR.r : surfaceData._lightMapL.r;
+    half lightAttenuation = 1;
 
-        // Calculate result.
-        half normalizedFdotL = (surfaceData._reverseFaceDirection >= 1 ? -1 : 1) * -0.5 * FdotL + 0.5;
-        normalizedFdotL %= 1;
-        half litOrShadow = step(normalizedFdotL , LightMap);
+    // light's distance & angle fade for point light & spot light (see GetAdditionalPerObjectLight(...) in Lighting.hlsl)
+    // Lighting.hlsl -> https://github.com/Unity-Technologies/Graphics/blob/master/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl
+    half distanceAttenuation = min(4,light.distanceAttenuation); //clamp to prevent light over bright if point/spot light too close to vertex
 
-        return litOrShadow ? light.color : light.color * surfaceData._shadowColor;
-        //return light.color * lerp(litOrShadow, 1, step(surfaceData._useLightMap, 0));
-    }
+    // N dot L
+    // simplest 1 line cel shade, you can always replace this line by your own method!
+    half litOrShadowArea = smoothstep(_CelShadeMidPoint-_CelShadeSoftness,_CelShadeMidPoint+_CelShadeSoftness, NoL);
 
-    half3 InternalShadeAdditionalLights(ToonSurfaceData surfaceData,
-    ToonLightingData lightingData, Light light, bool isAdditionalLight)
-    {
-        return 0; //write your own equation here ! (see ShadeSingleLightDefaultMethod(...))
-    }
+    // occlusion
+    litOrShadowArea *= surfaceData.occlusion;
 
-    half3 InternalShadeEmission(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light, bool isAdditionalLight)
-    {
-        half3 N = lightingData.normalWS;
-        half3 L = light.direction;
-        half3 V = lightingData.viewDirectionWS;
-        half3 H = normalize(L + V);
+    // face ignore celshade since it is usually very ugly using NoL method
+    litOrShadowArea = _IsFace? lerp(0.5,1,litOrShadowArea) : litOrShadowArea;
 
-        half3 shadowColor = surfaceData._shadowColor;
+    // dynamic face shadow map
+    litOrShadowArea = _UseFaceShadowMap ? CalculateFaceShadowMapShading(surfaceData, lightingData, light) : litOrShadowArea;
 
-        half3 emission = surfaceData.emission;
-        half NoL = dot(N, L);
+    // light's shadow map
+    litOrShadowArea *= lerp(1,light.shadowAttenuation,_ReceiveShadowMappingAmount);
 
-        half3 emissionResult = lerp(emission, emission * surfaceData.albedo, _EmissionMulByBaseColor); // optional mul albedo
-        return emissionResult;
-    }
+    half combinedShadowArea = litOrShadowArea;
+    
+    half3 litOrShadowColor = lerp(_ShadowMapColor,1, combinedShadowArea);
 
-    // Composite all shading results.
-    half3 InternalCompositeLightResults(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult,
-    ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
-    {
-        //half3 shadowColor = light.color * lerp(1 * surfaceData._shadowColor, 1, mainLightResult);
-        half3 rawLightSum = max(indirectResult, mainLightResult + additionalLightSumResult); // pick the highest between indirect and direct light
-        half lightLuminance = Luminance(rawLightSum);
+    half3 lightAttenuationRGB = litOrShadowColor * distanceAttenuation;
 
-        half3 finalLightMulResult = rawLightSum / max(1, lightLuminance / max(1, log(lightLuminance))); // allow controlled over bright using log
-        return surfaceData.albedo * finalLightMulResult + emissionResult;
-    }
+    // saturate() light.color to prevent over bright
+    // additional light reduce intensity since it is additive
+    return saturate(light.color) * lightAttenuationRGB * (isAdditionalLight ? 0.25 : 1);
+}
 
+half3 ShadeEmission(ToonSurfaceData surfaceData, ToonLightingData lightingData)
+{
+    half3 emissionResult = lerp(surfaceData.emission, surfaceData.emission * surfaceData.albedo, _EmissionMulByBaseColor); // optional mul albedo
+    return emissionResult;
+}
 
-    // We split lighting functions into: 
-    // - indirect
-    // - main light 
-    // - additional lights (point lights/spot lights)
-    // - emission
+half3 CompositeAllLightResults(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult, ToonSurfaceData surfaceData, ToonLightingData lightingData)
+{
+    // [remember you can write anything here, this is just a simple tutorial method]
+    // here we prevent light over bright,
+    // while still want to preserve light color's hue
+    half3 rawLightSum = max(indirectResult, mainLightResult + additionalLightSumResult); // pick the highest between indirect and direct light
+    return surfaceData.albedo * rawLightSum + emissionResult;
+}
 
-    half3 ShadeGI(ToonSurfaceData surfaceData, ToonLightingData lightingData)
-    {
-        return InternalShadeGI(surfaceData, lightingData);
-    }
+// Rotation with angle (in radians) and axis
+float3x3 AngleAxis3x3(float angle, float3 axis)
+{
+    float c, s;
+    sincos(angle, s, c);
 
-    half3 ShadeMainLight(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
-    {
-        return InternalShadeMainLight(surfaceData, lightingData, light, false);
-    }
+    float t = 1 - c;
+    float x = axis.x;
+    float y = axis.y;
+    float z = axis.z;
 
-    half3 ShadeAdditionalLight(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
-    {
-        return InternalShadeAdditionalLights(surfaceData, lightingData, light, true);
-    }
-
-    half3 ShadeEmission(ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
-    {
-        return InternalShadeEmission(surfaceData, lightingData, light, false);
-    }
-
-    half3 CompositeAllLightResults(half3 indirectResult, half3 mainLightResult, half3 additionalLightSumResult, half3 emissionResult,
-    ToonSurfaceData surfaceData, ToonLightingData lightingData, Light light)
-    {
-        return InternalCompositeLightResults(indirectResult, mainLightResult, additionalLightSumResult, emissionResult, surfaceData, lightingData, light);
-    }
-
-#endif
+    return float3x3(
+    t * x * x + c,      t * x * y - s * z,  t * x * z + s * y,
+    t * x * y + s * z,  t * y * y + c,      t * y * z - s * x,
+    t * x * z - s * y,  t * y * z + s * x,  t * z * z + c
+    );
+}

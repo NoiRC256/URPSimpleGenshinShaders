@@ -1,11 +1,10 @@
-// For more information, visit -> https://github.com/NoiRC256/UnityURPToonLitShaderExample
-// Original shader -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
+// For more information, visit -> https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
 
 /*
 This shader is a simple example showing you how to write your first URP custom lit shader with "minimum" shader code.
-You can use this shader as a starting point, add/edit code to develop your own custom lit shader for URP10.2.2 or above.
+You can use this shader as a starting point, add/edit code to develop your own custom lit shader for URP10.3.2 or above.
 
-*Usually, just by editing "SimpleURPToonLitOutlineExample_LightingEquation.hlsl" alone can control most of the visual result.
+*Usually, just by editing "SimpleGenshinFacial_LightingEquation.hlsl" alone can control most of the visual result.
 
 This shader includes 5 passes:
 0.ForwardLit    pass    (this pass will always render to the color buffer _CameraColorTexture)
@@ -19,22 +18,25 @@ This shader includes 5 passes:
 
 *In this shader, we choose static uniform branching over "shader_feature & multi_compile" for some of the togglable feature like "_UseEmission","_UseOcclusion"..., 
 because:
-    - we want to avoid this shader's build time takes too long (2^n)
-    - we want to avoid rendering spike when a new shader variant was seen by the camera first time (create GPU program)
-    - we want to avoid increasing ShaderVarientCollection's complexity
-    - we want to avoid shader size becomes too large easily (2^n)
-    - we want to avoid breaking SRP batcher's batching because SRP batcher is per shader variant batching, not per shader
-    - all modern GPU(include newer mobile devices) can handle static uniform branching with "almost" no performance cost
+- we want to avoid this shader's build time takes too long (2^n)
+- we want to avoid rendering spike when a new shader variant was seen by the camera first time (create GPU program)
+- we want to avoid increasing ShaderVarientCollection's complexity
+- we want to avoid shader size becomes too large easily (2^n)
+- we want to avoid breaking SRP batcher's batching because SRP batcher is per shader variant batching, not per shader
+- all modern GPU(include newer mobile devices) can handle static uniform branching with "almost" no performance cost
 */
-Shader "SimpleGenshinFacial"
+Shader "SimpleURPToonLitExample(With Outline)"
 {
     Properties
     {
+        [Header(High Level Setting)]
+        [ToggleUI]_IsFace("Is Face? (please turn on if this is a face material)", Float) = 0
+        [ToggleUI]_UseFaceShadowMap("_UseFaceShadowMap (please turn on this if using dynamic face shadow map)", Float) = 0
+
         // all properties will try to follow URP Lit shader's naming convention
         // so switching your URP lit material's shader to this toon lit shader will preserve most of the original properties if defined in this shader
 
         // for URP Lit shader's naming convention, see URP's Lit.shader
-
         [Header(Base Color)]
         [MainTexture]_BaseMap("_BaseMap (Albedo)", 2D) = "white" {}
         [HDR][MainColor]_BaseColor("_BaseColor", Color) = (1,1,1,1)
@@ -43,25 +45,9 @@ Shader "SimpleGenshinFacial"
         [Toggle(_UseAlphaClipping)]_UseAlphaClipping("_UseAlphaClipping", Float) = 0
         _Cutoff("_Cutoff (Alpha Cutoff)", Range(0.0, 1.0)) = 0.5
 
-        [Header(Facial Lightmap)]
-        [Toggle]_UseLightMap("_UseLightMap (on/off Custom Lightmap)", Float) = 0
-        [NoScaleOffset]_LightMap("_LightMap", 2D) = "white" { }
-        _ShadowColor("_ShadowColor", Color) = (0.97255, 0.89412, 0.88236)
-        _FaceDirectionOffset("_FaceDirectionOffset", Float) = 0
-        [Toggle]_ReverseFaceDirection("_ReverseFaceDirection (on/off)", Float) = 0
-
-        [Header(Lighting)]
-        _IndirectLightMinColor("_IndirectLightMinColor", Color) = (1, 1, 1, 1) // can prevent completely black if lightprobe not baked
-        _IndirectLightMultiplier("_IndirectLightMultiplier", Range(0, 1)) = 1
-        _DirectLightMultiplier("_DirectLightMultiplier", Range(0, 1)) = 0.25
-        _CelShadeMidPoint("_CelShadeMidPoint", Range(-1, 1)) = -.5
-        _CelShadeSoftness("_CelShadeSoftness", Range(0, 1)) = 0.05
-        _MainLightIgnoreCelShade("_MainLightIgnoreCelShade", Range(0, 1)) = 0
-        _AdditionalLightIgnoreCelShade("_AdditionalLightIgnoreCelShade", Range(0, 1)) = 0.9
-
         [Header(Emission)]
         [Toggle]_UseEmission("_UseEmission (on/off Emission completely)", Float) = 0
-        [HDR] _EmissionColor("_EmissionColor", Color) = (0.14902,0.07059,0.05490)
+        [HDR] _EmissionColor("_EmissionColor", Color) = (0,0,0)
         _EmissionMulByBaseColor("_EmissionMulByBaseColor", Range(0,1)) = 0
         [NoScaleOffset]_EmissionMap("_EmissionMap", 2D) = "white" {}
         _EmissionMapChannelMask("_EmissionMapChannelMask", Vector) = (1,1,1,0)
@@ -69,23 +55,36 @@ Shader "SimpleGenshinFacial"
         [Header(Occlusion)]
         [Toggle]_UseOcclusion("_UseOcclusion (on/off Occlusion completely)", Float) = 0
         _OcclusionStrength("_OcclusionStrength", Range(0.0, 1.0)) = 1.0
-        _OcclusionIndirectStrength("_OcclusionIndirectStrength", Range(0.0, 1.0)) = 0.5
-        _OcclusionDirectStrength("_OcclusionDirectStrength", Range(0.0, 1.0)) = 0.75
         [NoScaleOffset]_OcclusionMap("_OcclusionMap", 2D) = "white" {}
         _OcclusionMapChannelMask("_OcclusionMapChannelMask", Vector) = (1,0,0,0)
         _OcclusionRemapStart("_OcclusionRemapStart", Range(0,1)) = 0
         _OcclusionRemapEnd("_OcclusionRemapEnd", Range(0,1)) = 1
 
+        [Header(Lighting)]
+        _IndirectLightMinColor("_IndirectLightMinColor", Color) = (0.1,0.1,0.1,1) // can prevent completely black if lightprobe not baked
+        _IndirectLightMultiplier("_IndirectLightMultiplier", Range(0,1)) = 1
+        _DirectLightMultiplier("_DirectLightMultiplier", Range(0,1)) = 1
+        _CelShadeMidPoint("_CelShadeMidPoint", Range(-1,1)) = -0.5
+        _CelShadeSoftness("_CelShadeSoftness", Range(0,1)) = 0.05
+        _MainLightIgnoreCelShade("_MainLightIgnoreCelShade", Range(0,1)) = 0
+        _AdditionalLightIgnoreCelShade("_AdditionalLightIgnoreCelShade", Range(0,1)) = 0.9
+
+        [Header(Face Lighting)]
+        [NoScaleOffset]_FaceShadowMap("_FaceShadowMap", 2D) = "white" {}
+        _FaceDirectionOffset("_FaceDirectionOffset", Float) = 0
+        [ToggleUI]_FlipFaceDirection("_FlipFaceDirection", Float) = 0
+
         [Header(Shadow mapping)]
-        _ReceiveShadowMappingAmount("_ReceiveShadowMappingAmount", Range(0,1)) = 0.75
-        _ReceiveShadowMappingPosOffset("_ReceiveShadowMappingPosOffset (increase it if is face!)", Float) = 0
+        _ReceiveShadowMappingAmount("_ReceiveShadowMappingAmount", Range(0,1)) = 0.65
+        _ReceiveShadowMappingPosOffset("_ReceiveShadowMappingPosOffset", Float) = 0
+        _ShadowMapColor("_ShadowMapColor", Color) = (1,0.825,0.78)
 
         [Header(Outline)]
-        _OutlineWidth("_OutlineWidth (World Space)", Range(0,10)) = 0.36
-        _OutlineColor("_OutlineColor", Color) = (0.50196,0.37647,0.36471,1)
-        _OutlineZOffset("_OutlineZOffset (View Space) (increase it if is face!)", Range(0,1)) = 0.0001
+        _OutlineWidth("_OutlineWidth (World Space)", Range(0,4)) = 1
+        _OutlineColor("_OutlineColor", Color) = (0.5,0.5,0.5,1)
+        _OutlineZOffset("_OutlineZOffset (View Space)", Range(0,1)) = 0.0001
         [NoScaleOffset]_OutlineZOffsetMaskTex("_OutlineZOffsetMask (black is apply ZOffset)", 2D) = "black" {}
-        _OutlineZOffsetMaskRemapStart("_OutlineZOffsetMaskRemapStart", Range(0,1)) = 0.02
+        _OutlineZOffsetMaskRemapStart("_OutlineZOffsetMaskRemapStart", Range(0,1)) = 0
         _OutlineZOffsetMaskRemapEnd("_OutlineZOffsetMaskRemapEnd", Range(0,1)) = 1
     }
     SubShader
@@ -155,8 +154,7 @@ Shader "SimpleGenshinFacial"
             // will be stripped from build
             // 2) Invalid combinations are stripped. e.g variants with _MAIN_LIGHT_SHADOWS_CASCADE
             // but not _MAIN_LIGHT_SHADOWS are invalid and therefore stripped.
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
@@ -228,7 +226,7 @@ Shader "SimpleGenshinFacial"
 
             ENDHLSL
         }
- 
+        
         // ShadowCaster pass. Used for rendering URP's shadowmaps
         Pass
         {
