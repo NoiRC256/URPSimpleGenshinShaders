@@ -1,3 +1,17 @@
+# ⚠️Note
+
+This shader is a minimal proof of concept.
+
+It is highly recommended to use [stalomeow/StarRailNPRShader](https://github.com/stalomeow/StarRailNPRShader) instead.
+
+# ⚠️注意
+
+本项目仅为概念验证
+
+建议使用 Stalo 大佬的仿星铁渲染 [stalomeow/StarRailNPRShader](https://github.com/stalomeow/StarRailNPRShader)
+
+---
+
 # Overview
 A Unity URP shader for Genshin Impact style character facial shading.
 
