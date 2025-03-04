@@ -28,8 +28,6 @@ A Unity URP shader for Genshin Impact style character facial shading.
  - If `IsFace?` is set to true, shadows casted by other objects onto it may disappear or become unstable when the camera is close. This is because the shader relies on adding a `_ReceiveShadowMappingPosOffset` to visually hide dirty shadows on the face.
 
  - Lacks companion script that sends face direction information to shader.
-
- [Demo Video (Bilibili)](https://www.bilibili.com/video/BV15t4y1V76U)
  
  <img src="https://i.ibb.co/DfHh14Y/thumbnail1-l-JPG.png" width="50%">
  
